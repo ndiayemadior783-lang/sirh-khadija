@@ -15,8 +15,8 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed la structure de base du SIRH : comptes de connexion,
-     * dÃ©partements et postes. Les employÃ©s, contrats, prÃ©sences,
-     * etc. sont ajoutÃ©s directement depuis l'interface.
+     * departements et postes. Les employes, contrats, presences,
+     * etc. sont ajoutes directement depuis l'interface.
      */
     public function run(): void
     {
@@ -50,15 +50,15 @@ class DatabaseSeeder extends Seeder
             'phone' => '+221 70 222 11 00',
         ]);
 
-        // ---- DÃ©partements ----
+        // ---- Departements ----
         $departements = [
-            ['nom' => 'Direction GÃ©nÃ©rale', 'responsable' => 'Khadija Ndiaye'],
+            ['nom' => 'Direction Générale', 'responsable' => 'Khadija Ndiaye'],
             ['nom' => 'Ressources Humaines', 'responsable' => 'Aminata Diallo'],
-            ['nom' => 'Consulting & StratÃ©gie', 'responsable' => 'Moussa Camara'],
-            ['nom' => 'Finance & ComptabilitÃ©', 'responsable' => ''],
+            ['nom' => 'Consulting & Stratégie', 'responsable' => 'Moussa Camara'],
+            ['nom' => 'Finance & Comptabilité', 'responsable' => ''],
             ['nom' => 'Informatique & Digital', 'responsable' => ''],
             ['nom' => 'Marketing & Communication', 'responsable' => ''],
-            ['nom' => 'Juridique & ConformitÃ©', 'responsable' => ''],
+            ['nom' => 'Juridique & Conformité', 'responsable' => ''],
         ];
 
         $depModel = [];
@@ -72,13 +72,13 @@ class DatabaseSeeder extends Seeder
 
         // ---- Postes ----
         $postesData = [
-            'Direction GÃ©nÃ©rale' => ['Directeur GÃ©nÃ©ral', 'Assistante de Direction'],
-            'Ressources Humaines' => ['Responsable RH', 'ChargÃ© de recrutement', 'Assistant RH'],
-            'Consulting & StratÃ©gie' => ['Consultant Senior', 'Consultant ConfirmÃ©', 'Consultant Junior'],
-            'Finance & ComptabilitÃ©' => ['Responsable Financier', 'Comptable', 'ContrÃ´leur de gestion'],
-            'Informatique & Digital' => ['Responsable Informatique', 'DÃ©veloppeur Full-Stack', 'Data Analyst'],
+            'Direction Générale' => ['Directeur Général', 'Assistante de Direction'],
+            'Ressources Humaines' => ['Responsable RH', 'Chargé de recrutement', 'Assistant RH'],
+            'Consulting & Stratégie' => ['Consultant Senior', 'Consultant Confirmé', 'Consultant Junior'],
+            'Finance & Comptabilité' => ['Responsable Financier', 'Comptable', 'Contrôleur de gestion'],
+            'Informatique & Digital' => ['Responsable Informatique', 'Développeur Full-Stack', 'Data Analyst'],
             'Marketing & Communication' => ['Responsable Marketing', 'Community Manager'],
-            'Juridique & ConformitÃ©' => ['Juriste'],
+            'Juridique & Conformité' => ['Juriste'],
         ];
 
         foreach ($postesData as $depNom => $postes) {

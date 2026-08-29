@@ -19,18 +19,18 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // CongÃƒÆ’Ã‚Â©s : tous les utilisateurs peuvent consulter et soumettre
+    // Conges : tous les utilisateurs peuvent consulter et soumettre
     Route::get('conges', [CongeController::class, 'index'])->name('conges.index');
     Route::get('conges/create', [CongeController::class, 'create'])->name('conges.create');
     Route::post('conges', [CongeController::class, 'store'])->name('conges.store');
 
-    // Validation des congÃƒÆ’Ã‚Â©s : gestionnaires
+    // Validation des conges : gestionnaires
     Route::middleware('role:admin,rh,manager')->group(function () {
         Route::post('conges/{conge}/valider', [CongeController::class, 'valider'])->name('conges.valider');
         Route::post('conges/{conge}/rejeter', [CongeController::class, 'rejeter'])->name('conges.rejeter');
     });
 
-    // EmployÃƒÆ’Ã‚Â©s : consultation pour les gestionnaires, ÃƒÆ’Ã‚Â©criture admin/RH
+    // Employes : consultation pour les gestionnaires, ecriture admin/RH
     Route::get('employes', [EmployeController::class, 'index'])->middleware('role:admin,rh,manager')->name('employes.index');
     Route::get('employes/create', [EmployeController::class, 'create'])->middleware('role:admin,rh')->name('employes.create');
     Route::post('employes', [EmployeController::class, 'store'])->middleware('role:admin,rh')->name('employes.store');
@@ -39,7 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('employes/{employe}', [EmployeController::class, 'update'])->middleware('role:admin,rh')->name('employes.update');
     Route::delete('employes/{employe}', [EmployeController::class, 'destroy'])->middleware('role:admin,rh')->name('employes.destroy');
 
-    // Formations : consultation pour les gestionnaires, ÃƒÆ’Ã‚Â©criture admin/RH
+    // Formations : consultation pour les gestionnaires, ecriture admin/RH
     Route::get('formations', [FormationController::class, 'index'])->middleware('role:admin,rh,manager')->name('formations.index');
     Route::get('formations/create', [FormationController::class, 'create'])->middleware('role:admin,rh')->name('formations.create');
     Route::post('formations', [FormationController::class, 'store'])->middleware('role:admin,rh')->name('formations.store');
@@ -53,13 +53,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('contrats/{contrat}', [ContratController::class, 'show'])->middleware('role:admin,rh')->name('contrats.show');
     Route::delete('contrats/{contrat}', [ContratController::class, 'destroy'])->middleware('role:admin,rh')->name('contrats.destroy');
 
-    // DÃƒÆ’Ã‚Â©partements : admin/RH
+    // Departements : admin/RH
     Route::get('departements', [DepartementController::class, 'index'])->middleware('role:admin,rh')->name('departements.index');
     Route::get('departements/create', [DepartementController::class, 'create'])->middleware('role:admin,rh')->name('departements.create');
     Route::post('departements', [DepartementController::class, 'store'])->middleware('role:admin,rh')->name('departements.store');
     Route::delete('departements/{departement}', [DepartementController::class, 'destroy'])->middleware('role:admin,rh')->name('departements.destroy');
 
-    // PrÃƒÆ’Ã‚Â©sences : consultation gestionnaires, ÃƒÆ’Ã‚Â©criture admin/RH
+    // Presences : consultation gestionnaires, ecriture admin/RH
     Route::get('presences', [PresenceController::class, 'index'])->middleware('role:admin,rh,manager')->name('presences.index');
     Route::get('presences/create', [PresenceController::class, 'create'])->middleware('role:admin,rh')->name('presences.create');
     Route::post('presences', [PresenceController::class, 'store'])->middleware('role:admin,rh')->name('presences.store');

@@ -88,7 +88,7 @@ class EmployeController extends Controller
 
         Employe::create($data);
 
-        return redirect()->route('employes.index')->with('success', 'EmployÃƒÂ© ajoutÃƒÂ© avec succÃƒÂ¨s.');
+        return redirect()->route('employes.index')->with('success', 'Employe ajoute avec succes.');
     }
 
     public function show(Employe $employe)
@@ -141,12 +141,12 @@ class EmployeController extends Controller
 
         $employe->update($data);
 
-        return redirect()->route('employes.show', $employe)->with('success', 'EmployÃƒÂ© mis ÃƒÂ  jour avec succÃƒÂ¨s.');
+        return redirect()->route('employes.show', $employe)->with('success', 'Employe mis a jour avec succes.');
     }
 
     public function destroy(Employe $employe)
     {
         $employe->delete();
-        return redirect()->route('employes.index')->with('success', 'EmployÃƒÂ© supprimÃƒÂ©.');
+        return redirect()->route('employes.index')->with('success', 'Employe supprime.');
     }
 }

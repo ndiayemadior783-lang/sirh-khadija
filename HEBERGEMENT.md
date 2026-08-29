@@ -1,6 +1,9 @@
 # GUIDE D'HEBERGEMENT DU SIRH - KHADIJA CONSULTING
 
-Ce guide explique comment mettre le SIRH en ligne selon 4 scÃƒÆ’Ã‚Â©narios, du plus simple au plus professionnel :
+> **Pour un deploiement MySQL professionnel destine a la vente a Khadija Consulting,
+> voir le guide dedie : DEPLOIEMENT-PRODUCTION.md.**
+
+Ce guide explique comment mettre le SIRH en ligne selon 4 scenarios, du plus simple au plus professionnel :
 1. Hebergement local / LAN (soutenance)
 2. Hebergement gratuit en ligne (Render) - demo publique
 3. Hebergement mutualise avec cPanel (Hostinger, OVH...) - MySQL
@@ -166,7 +169,7 @@ Utilisation :
     # sur le VPS (Ubuntu 22.04/24.04 neuf)
     sudo bash deploy-vps.sh sirh.khadijaconsulting.sn https://github.com/VOTRE_COMPTE/sirh-khadija.git
 
-Avant d'exÃƒÆ’Ã‚Â©cuter :
+Avant d'executer :
     - le domaine doit pointer vers l'IP du VPS (zone DNS)
     - les ports 80 et 443 doivent etre ouverts
     - remplacer CHANGE_ME_SECURE_PASS dans le script par un mot de passe fort

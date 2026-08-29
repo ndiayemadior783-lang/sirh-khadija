@@ -78,8 +78,8 @@ class BulletinPaieController extends Controller
         }
 
         $message = $cree > 0
-            ? "{$cree} bulletin(s) gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rÃƒÆ’Ã‚Â©(s) pour la pÃƒÆ’Ã‚Â©riode {$period}."
-            : 'Tous les bulletins existent dÃƒÆ’Ã‚Â©jÃƒÆ’Ã‚Â  pour cette pÃƒÆ’Ã‚Â©riode.';
+            ? "{$cree} bulletin(s) genere(s) pour la periode {$period}."
+            : 'Tous les bulletins existent deje pour cette periode.';
 
         return redirect()->route('bulletins.index', ['period' => $period])->with('success', $message);
     }

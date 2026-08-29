@@ -171,6 +171,19 @@ routes/web.php          # Définition des routes
 
 `users`, `departements`, `postes`, `employees`, `contrats`, `presences`, `conges`, `formations`, `formation_employee`, `primes`, `bulletins_paie`.
 
+## 📦 Livrables et documentation
+
+| Document | Description |
+|----------|-------------|
+| `OFFRE-KHADIJA-CONSULTING.md` | Offre commerciale client (versions DOCX et PDF dans le dossier Téléchargements) |
+| `DEPLOIEMENT-PRODUCTION.md` | Guide de déploiement en production avec MySQL (cPanel / VPS) |
+| `GUIDE-CREATION.md` | Guide complet de création du projet |
+| `DEMO-SOUTENANCE.md` | Script de démonstration pour la soutenance |
+| `HEBERGEMENT.md` | Guide d'hébergement (local, Render démo, cPanel, VPS) |
+| `sauvegarde-mysql.bat` et `sauvegarde-mysql.sh` | Sauvegarde automatique de la base MySQL |
+| `restaurer-mysql.bat` | Restauration d'une sauvegarde MySQL |
+| `test_flux_metier.php` | Script de validation des flux métier (employé, contrat, présence, congé, formation, prime, bulletin) |
+
 ## 🚀 Déploiement en production (exemple : Laragon / VPS)
 
 ### Sur Laragon
