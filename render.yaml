@@ -6,10 +6,12 @@ services:
     dockerfilePath: Dockerfile
     autoDeploy: true
     healthCheckPath: /login
-    disk:
-      name: sirh-data
-      mountPath: /var/www/html/database
-      sizeGB: 1
+    # NOTE : le plan gratuit Render ne supporte PAS les persistent disks.
+    # La base SQLite est creee a chaque demarrage (entrypoint.sh) puis les
+    # migrations + seed sont executes : l'application est donc fonctionnelle
+    # a chaque reveil, mais les donnees saisies ne survivent pas a un
+    # redeploiement. Pour une base persistante (MySQL), voir
+    # DEPLOIEMENT-PRODUCTION.md (cPanel / VPS).
     envVars:
       - key: APP_ENV
         value: production
