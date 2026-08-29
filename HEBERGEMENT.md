@@ -1,6 +1,6 @@
 # GUIDE D'HEBERGEMENT DU SIRH - KHADIJA CONSULTING
 
-Ce guide explique comment mettre le SIRH en ligne selon 4 scénarios, du plus simple au plus professionnel :
+Ce guide explique comment mettre le SIRH en ligne selon 4 scÃ©narios, du plus simple au plus professionnel :
 1. Hebergement local / LAN (soutenance)
 2. Hebergement gratuit en ligne (Render) - demo publique
 3. Hebergement mutualise avec cPanel (Hostinger, OVH...) - MySQL
@@ -24,47 +24,45 @@ Avec Laragon, c'est encore plus simple :
     - Ne pas oublier d'activer le HTTPS avec le bouton "Switch to HTTPS" si besoin.
 
 ====================================================================
-OPTION 2 - HEBERGEMENT GRATUIT EN LIGNE (RENDER) - DEMO PUBLIQUE
+OPTION 2 - HEBERGEMENT GRATUIT EN LIGNE (RENDER) - MYSQL
 ====================================================================
 
-Render propose un plan gratuit pour les applications web. Il peut heberger
-ce projet Laravel avec une base SQLite (suffisant pour une demo).
+Render propose un plan gratuit. Le projet est fourni avec le fichier
+render.yaml qui cree DEUX services relies automatiquement :
+   - un service web PHP (sirh-khadija-rh)
+   - une base MySQL managée (sirh-khadija-db)
+Les variables de connexion MySQL sont injectees automatiquement.
 
 Etapes :
 1. Creer un depot GitHub et pousser le projet :
-       cd sirh-khadija
-       git init
+       cd C:\laragon\www\sirh-khadija
        git add .
-       git commit -m "SIRH Khadija Consulting"
+       git commit -m "SIRH Khadija Consulting (MySQL)"
        git remote add origin https://github.com/VOTRE_COMPTE/sirh-khadija.git
        git push -u origin main
 
 2. Creer un compte sur https://render.com (avec GitHub).
 
-3. Cliquer "New > Web Service", connecter le depot GitHub.
+3. Cliquer "New > Blueprint" (ou "New > Web Service"),
+   puis connecter/selectionner le depot GitHub.
 
-4. Render detecte le fichier render.yaml du projet (deja prepare).
-   Verifier :
-   - Nom : sirh-khadija-rh
-   - Runtime : PHP
-   - Build Command : composer install --no-dev --optimize-autoloader
-                     && php artisan key:generate
-                     && npm install && npm run build
-   - Start Command : php artisan serve --host=0.0.0.0 --port=$PORT
-   - Disk (persistant) : monte /app/database (pour la base SQLite)
-   - Variables : APP_ENV=production, APP_DEBUG=false, DB_CONNECTION=sqlite
+4. Render detecte le fichier render.yaml du projet :
+   - Web service : sirh-khadija-rh (PHP, plan free)
+   - Base de donnees : sirh-khadija-db (MySQL, plan free)
+   - Les variables DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME,
+     DB_PASSWORD sont branchées automatiquement sur la base.
 
-5. Cliquer "Deploy". Render va cloner, installer, compiler et demarrer.
-   Apres le premier deploiement :
-   - Ouvrir la console du service (Shell) et lancer :
-         php artisan migrate --force
-         php artisan db:seed --force
+5. Cliquer "Apply / New resources" puis "Deploy".
+   Apres le premier deploiement, ouvrir la console du service (Shell)
+   et lancer :
+         php artisan migrate --force --seed
    - L'application est alors en ligne sur https://sirh-khadija-rh.onrender.com
 
 Remarques :
-- Le plan gratuit se met en veille apres 15 min d'inactivite (rechargement lent).
-- La base SQLite est persistee sur le disque monte (survie aux redeploiements).
-- Pour securiser, activer l'authentification (Basic Auth) dans le menu Render.
+- Le plan gratuit se met en veille apres 15 min d'inactivite.
+- Sur Render, on utilise la commande start "php artisan serve" (suffisant
+  pour une demo). Pour gros volumes, passer a un plan payant + Nginx.
+- Pour securiser la demo, activer l'authentification (Basic Auth) dans Render.
 
 ====================================================================
 OPTION 3 - HEBERGEMENT MUTUALISE (Hostinger, OVH, ZELEM...)
@@ -165,7 +163,7 @@ Utilisation :
     # sur le VPS (Ubuntu 22.04/24.04 neuf)
     sudo bash deploy-vps.sh sirh.khadijaconsulting.sn https://github.com/VOTRE_COMPTE/sirh-khadija.git
 
-Avant d'exécuter :
+Avant d'exÃ©cuter :
     - le domaine doit pointer vers l'IP du VPS (zone DNS)
     - les ports 80 et 443 doivent etre ouverts
     - remplacer CHANGE_ME_SECURE_PASS dans le script par un mot de passe fort
@@ -186,27 +184,25 @@ CHECKLIST DE SECURITE AVANT LA MISE EN PRODUCTION
 [x] Changer les taux de paie si besoin (dans le controleur BulletinPaie)
 
 ====================================================================
-CHANGER SQLITE VERS MYSQL (SI NECESSAIRE)
+CONFIGURATION MYSQL (DEJA EN PLACE DANS CE PROJET)
 ====================================================================
 
-1. Dans .env :
+Ce projet est deja configure pour MySQL en local et en production.
+
+1. En local (Laragon) - .env :
         DB_CONNECTION=mysql
         DB_HOST=127.0.0.1
         DB_PORT=3306
         DB_DATABASE=sirh_khadija
         DB_USERNAME=root
-        DB_PASSWORD=...
+        DB_PASSWORD=
 
 2. Creer la base et migrer :
-        php artisan migrate
-        php artisan db:seed
+        php artisan migrate:fresh --seed
 
-3. Les requetes SQL utilisees par les bulletins utilisent SQLite (strftime).
-   Pour MySQL, remplacer strftime('%Y-%m', date) par DATE_FORMAT(date, '%Y-%m')
-   dans :
-        - app/Http/Controllers/BulletinPaieController.php
-        - app/Http/Controllers/EmployeController.php (presenceCeMois)
-        - database/seeders/DatabaseSeeder.php
+3. NOTE : les anciennes requetes SQLite (strftime) ont deja ete remplacees par
+   leur equivalent MySQL (DATE_FORMAT) dans tous les fichiers du projet.
+   Aucune modification n'est necessaire.
 
 ====================================================================
 DEPANNAGE RAPIDE
