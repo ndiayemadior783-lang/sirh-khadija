@@ -16,6 +16,8 @@ services:
         value: production
       - key: APP_DEBUG
         value: "false"
+      - key: APP_KEY
+        value: "base64:fXWSiObnTKiAIWBqpnEUwuBycB8gjWqBfm60nik+7q4="
       - key: APP_URL
         value: https://sirh-khadija-rh.onrender.com
       - key: DB_CONNECTION
