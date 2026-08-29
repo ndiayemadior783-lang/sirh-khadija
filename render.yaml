@@ -1,18 +1,14 @@
 services:
   - type: web
     name: sirh-khadija-rh
-    runtime: php
+    runtime: docker
     plan: free
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      npm install
-      npm run build
-    startCommand: php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT
+    dockerfilePath: Dockerfile
     autoDeploy: true
     healthCheckPath: /login
     disk:
       name: sirh-data
-      mountPath: /app/database
+      mountPath: /var/www/html/database
       sizeGB: 1
     envVars:
       - key: APP_ENV
