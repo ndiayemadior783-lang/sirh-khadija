@@ -1,0 +1,15 @@
+# -------------------------------------------------------------
+#  REDIRECTION CIVIL POUR cPanel / HEBERGEMENT MUTUALISE
+#  A PLACER dans public_html/sirh-khadija/.htaccess
+#  Redirige toutes les requetes vers le dossier /public de Laravel
+# -------------------------------------------------------------
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Rediriger vers https si HTTPS n'est pas encore actif
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+    # Rediriger toutes les requetes vers /public
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

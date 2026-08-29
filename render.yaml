@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: sirh-khadija-rh
+    runtime: php
+    plan: free
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan key:generate
+      npm install
+      npm run build
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    autoDeploy: true
+    healthCheckPath: /login
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://sirh-khadija-rh.onrender.com
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: sirh-khadija-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: sirh-khadija-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: sirh-khadija-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: sirh-khadija-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: sirh-khadija-db
+          property: password
+      - key: SESSION_DRIVER
+        value: database
+
+databases:
+  - name: sirh-khadija-db
+    plan: free
+    databaseName: sirh_khadija
+    user: sirh_user
