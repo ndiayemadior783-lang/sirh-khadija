@@ -88,7 +88,7 @@ class EmployeController extends Controller
 
         Employe::create($data);
 
-        return redirect()->route('employes.index')->with('success', 'EmployÃ© ajoutÃ© avec succÃ¨s.');
+        return redirect()->route('employes.index')->with('success', 'EmployÃƒÂ© ajoutÃƒÂ© avec succÃƒÂ¨s.');
     }
 
     public function show(Employe $employe)
@@ -99,7 +99,8 @@ class EmployeController extends Controller
         $dernierContrat = $employe->contrats()->orderByDesc('date_debut')->first();
         $dernierBulletin = $employe->bulletins()->orderByDesc('period')->first();
         $presenceCeMois = $employe->presences()
-            ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [now()->format('Y-m')])
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
             ->count();
         $congeValideCeMois = $employe->conges()->where('statut', 'valide')->count();
 
@@ -140,12 +141,12 @@ class EmployeController extends Controller
 
         $employe->update($data);
 
-        return redirect()->route('employes.show', $employe)->with('success', 'EmployÃ© mis Ã  jour avec succÃ¨s.');
+        return redirect()->route('employes.show', $employe)->with('success', 'EmployÃƒÂ© mis ÃƒÂ  jour avec succÃƒÂ¨s.');
     }
 
     public function destroy(Employe $employe)
     {
         $employe->delete();
-        return redirect()->route('employes.index')->with('success', 'EmployÃ© supprimÃ©.');
+        return redirect()->route('employes.index')->with('success', 'EmployÃƒÂ© supprimÃƒÂ©.');
     }
 }

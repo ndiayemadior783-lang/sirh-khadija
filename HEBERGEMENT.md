@@ -1,6 +1,6 @@
 # GUIDE D'HEBERGEMENT DU SIRH - KHADIJA CONSULTING
 
-Ce guide explique comment mettre le SIRH en ligne selon 4 scÃ©narios, du plus simple au plus professionnel :
+Ce guide explique comment mettre le SIRH en ligne selon 4 scÃƒÆ’Ã‚Â©narios, du plus simple au plus professionnel :
 1. Hebergement local / LAN (soutenance)
 2. Hebergement gratuit en ligne (Render) - demo publique
 3. Hebergement mutualise avec cPanel (Hostinger, OVH...) - MySQL
@@ -24,46 +24,49 @@ Avec Laragon, c'est encore plus simple :
     - Ne pas oublier d'activer le HTTPS avec le bouton "Switch to HTTPS" si besoin.
 
 ====================================================================
-OPTION 2 - HEBERGEMENT GRATUIT EN LIGNE (RENDER) - MYSQL
+====================================================================
+====================================================================
+OPTION 2 - HEBERGEMENT GRATUIT EN LIGNE (RENDER) - DEMO
 ====================================================================
 
-Render propose un plan gratuit. Le projet est fourni avec le fichier
-render.yaml qui cree DEUX services relies automatiquement :
-   - un service web PHP (sirh-khadija-rh)
-   - une base MySQL managée (sirh-khadija-db)
-Les variables de connexion MySQL sont injectees automatiquement.
+IMPORTANT : Render ne fournit PAS de base MySQL managed (uniquement
+PostgreSQL et Redis). Pour une demo gratuite en ligne, le projet utilise
+donc une base SQLite persistee sur un disque. La base MySQL reste la
+reference pour la production locale et mutualisee (voir options 3 et 4).
+
+Le code du projet est 100% portable : il fonctionne indifferentement avec
+MySQL (production), SQLite (demo Render) ou PostgreSQL.
 
 Etapes :
-1. Creer un depot GitHub et pousser le projet :
-       cd C:\laragon\www\sirh-khadija
-       git add .
-       git commit -m "SIRH Khadija Consulting (MySQL)"
-       git remote add origin https://github.com/VOTRE_COMPTE/sirh-khadija.git
-       git push -u origin main
+1. Le depot GitHub est deja pousse (voir debut du guide).
 
 2. Creer un compte sur https://render.com (avec GitHub).
 
-3. Cliquer "New > Blueprint" (ou "New > Web Service"),
-   puis connecter/selectionner le depot GitHub.
+3. Cliquer "New > Blueprint", puis connecter/selectionner le depot
+   sirh-khadija. Render lit le fichier render.yaml du projet.
 
-4. Render detecte le fichier render.yaml du projet :
-   - Web service : sirh-khadija-rh (PHP, plan free)
-   - Base de donnees : sirh-khadija-db (MySQL, plan free)
-   - Les variables DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME,
-     DB_PASSWORD sont branchées automatiquement sur la base.
+4. Voir la configuration detectee :
+   - Runtime : PHP
+   - Build Command : composer install --no-dev --optimize-autoloader
+                     && npm install && npm run build
+   - Start Command : php artisan migrate --force
+                     && php artisan db:seed --force
+                     && php artisan serve --host=0.0.0.0 --port=
+   - Disk (persistant) : monte /app/database (pour la base SQLite)
+   - Variables : APP_ENV=production, APP_DEBUG=false, DB_CONNECTION=sqlite
 
-5. Cliquer "Apply / New resources" puis "Deploy".
-   Apres le premier deploiement, ouvrir la console du service (Shell)
-   et lancer :
-         php artisan migrate --force --seed
-   - L'application est alors en ligne sur https://sirh-khadija-rh.onrender.com
+5. Cliquer "Apply" puis "Deploy". Render installe et demarre.
+   Les migrations et le seed (3 comptes + departements + postes)
+   sont executes automatiquement a chaque demarrage.
+
+6. L'application est en ligne sur https://sirh-khadija-rh.onrender.com
+   (derriere la protection Basic Auth si activee).
 
 Remarques :
-- Le plan gratuit se met en veille apres 15 min d'inactivite.
-- Sur Render, on utilise la commande start "php artisan serve" (suffisant
-  pour une demo). Pour gros volumes, passer a un plan payant + Nginx.
-- Pour securiser la demo, activer l'authentification (Basic Auth) dans Render.
-
+- Le plan gratuit se met en veille apres 15 min d'inactivite (1er chargement lent).
+- La base SQLite est persistee sur le disque /app/database (survit aux redeploiements).
+- Pour la production reelle avec MySQL, utiliser l'option 3 (cPanel/Hostinger)
+  ou l'option 4 (VPS Ubuntu + Nginx + MySQL) ci-dessous.
 ====================================================================
 OPTION 3 - HEBERGEMENT MUTUALISE (Hostinger, OVH, ZELEM...)
 ====================================================================
@@ -163,7 +166,7 @@ Utilisation :
     # sur le VPS (Ubuntu 22.04/24.04 neuf)
     sudo bash deploy-vps.sh sirh.khadijaconsulting.sn https://github.com/VOTRE_COMPTE/sirh-khadija.git
 
-Avant d'exÃ©cuter :
+Avant d'exÃƒÆ’Ã‚Â©cuter :
     - le domaine doit pointer vers l'IP du VPS (zone DNS)
     - les ports 80 et 443 doivent etre ouverts
     - remplacer CHANGE_ME_SECURE_PASS dans le script par un mot de passe fort

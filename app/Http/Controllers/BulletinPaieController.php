@@ -44,11 +44,13 @@ class BulletinPaieController extends Controller
             }
 
             $primes = Prime::where('employee_id', $employe->id)
-                ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$period])
+                ->whereYear('date', substr($period, 0, 4))
+                ->whereMonth('date', (int) substr($period, 5, 2))
                 ->sum('montant');
 
             $heuresSup = Presence::where('employee_id', $employe->id)
-                ->whereRaw("DATE_FORMAT(date, '%Y-%m') = ?", [$period])
+                ->whereYear('date', substr($period, 0, 4))
+                ->whereMonth('date', (int) substr($period, 5, 2))
                 ->sum('heures_sup');
 
             $montantHeuresSup = round($heuresSup * self::TAUX_HORAIRE, 2);
@@ -76,8 +78,8 @@ class BulletinPaieController extends Controller
         }
 
         $message = $cree > 0
-            ? "{$cree} bulletin(s) gÃ©nÃ©rÃ©(s) pour la pÃ©riode {$period}."
-            : 'Tous les bulletins existent dÃ©jÃ  pour cette pÃ©riode.';
+            ? "{$cree} bulletin(s) gÃƒÆ’Ã‚Â©nÃƒÆ’Ã‚Â©rÃƒÆ’Ã‚Â©(s) pour la pÃƒÆ’Ã‚Â©riode {$period}."
+            : 'Tous les bulletins existent dÃƒÆ’Ã‚Â©jÃƒÆ’Ã‚Â  pour cette pÃƒÆ’Ã‚Â©riode.';
 
         return redirect()->route('bulletins.index', ['period' => $period])->with('success', $message);
     }
