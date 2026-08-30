@@ -30,6 +30,40 @@ Avec Laragon, c'est encore plus simple :
 ====================================================================
 ====================================================================
 OPTION 2 - HEBERGEMENT GRATUIT EN LIGNE (RENDER) - DEMO
+
+### IMPORTANT - PHP n'apparait pas dans Render
+Render ne propose PAS PHP dans la liste des runtimes du formulaire
+classique ("Create Web Service" -> Node, Python, Ruby, etc.).
+Le projet PHP/Laravel se d'ploie sur Render UNIQUEMENT en mode **Docker**
+ou **Blueprint**, et NON en "Create Web Service" avec runtime Node.
+
+### Etape par etape (a faire dans le dashboard Render)
+1. Supprimer l'ancien service ou blueprint sirh-khadija-rh qui est en erreur.
+2. Cliquer **New -> Blueprint** (PAS "Web Service").
+3. Connecter / selectionner le depot GitHub ndiayemadior783-lang/sirh-khadija
+   (depot public : aucun acces specifique a configurer).
+4. Render lit automatiquement le fichier `render.yaml` du projet :
+   - Type : service web
+   - Runtime : **Docker** (le Dockerfile contient PHP 8.3 + Apache)
+   - Plan : free
+   - Build : composer install + npm run build (fait dans le Dockerfile)
+   - Variables : APP_ENV, APP_DEBUG, APP_KEY, DB_CONNECTION=sqlite, etc.
+5. Cliquer **Apply** puis **Deploy**.
+6. L'application est en ligne sur https://sirh-khadija-rh.onrender.com
+
+### Pourquoi l'ancien deploy affichait "404 x-render-routing: no-server"
+- L'ancien render.yaml declarait un **persistent disk**, or le **plan gratuit
+  Render ne supporte pas les disks** : le service ne peut pas demarrer.
+- Correction : le render.yaml actuel est sans disk ; la base SQLite est creee
+  a chaque demarrage par entrypoint.sh, puis `php artisan migrate` et
+  `php artisan db:seed` sont executes automatiquement.
+
+### Limite du plan gratuit
+- Le service s'endort apres 15 min d'inactivite (1er chargement lent).
+- La base SQLite est remise a zero a chaque redeploiement : les donnees
+  saisies ne sont pas conservees. Pour une base persistante et professionnelle,
+  utiliser l'option 3 (cPanel/Hostinger) ou 4 (VPS) avec MySQL.
+
 ====================================================================
 
 IMPORTANT : Render ne fournit PAS de base MySQL managed (uniquement
