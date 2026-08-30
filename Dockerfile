@@ -1,5 +1,5 @@
 # ---- Etape 1 : compilation des assets (Node) ----
-FROM node:22-alpine AS assets
+FROM node:18-alpine AS assets
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
