@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CongeDecisionMail;
 use App\Models\Conge;
 use App\Models\Employe;
 use App\Models\Parametre;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\MailConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class CongeController extends Controller
 {
@@ -75,7 +78,7 @@ class CongeController extends Controller
 
         activity()->performedOn($conge)->causedBy($request->user())->log('Conge valide');
 
-        return back()->with('success', 'Conge valide.');
+        return back()->with('success', 'Conge valide.' . $this->notifierEmploye($conge));
     }
 
     public function rejeter(Request $request, Conge $conge)
@@ -88,7 +91,7 @@ class CongeController extends Controller
 
         activity()->performedOn($conge)->causedBy($request->user())->log('Conge rejete');
 
-        return back()->with('success', 'Conge rejete.');
+        return back()->with('success', 'Conge rejete.' . $this->notifierEmploye($conge));
     }
 
     public function planning(Request $request)
@@ -161,6 +164,25 @@ class CongeController extends Controller
             'statsAttente' => $conges->where('statut', 'en_attente')->count(),
             'statsRefuses' => $conges->where('statut', 'refuse')->count(),
         ];
+    }
+
+    /**
+     * Envoie la decision par e-mail a l'employe (si SMTP actif). Retourne un complement de message.
+     */
+    private function notifierEmploye(Conge $conge): string
+    {
+        $email = $conge->employee?->email;
+        if (!$email || !MailConfig::estConfigure() || !Parametre::instance()->mail_notif_conges) {
+            return '';
+        }
+
+        try {
+            Mail::to($email)->queue(new CongeDecisionMail($conge));
+            return ' Un e-mail de notification va etre envoye a ' . $email . '.';
+        } catch (\Throwable $e) {
+            report($e);
+            return ' (E-mail de notification non programme.)';
+        }
     }
 
     private function validateConge(Request $request): array

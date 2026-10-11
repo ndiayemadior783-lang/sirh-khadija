@@ -23,5 +23,15 @@ php artisan db:seed --force || { echo "[ERREUR] Echec du seed"; exit 1; }
 
 chown -R www-data:www-data storage bootstrap/cache
 
+# Worker de file d'attente (envoi des e-mails en arriere-plan), relance automatique s'il s'arrete
+echo "[SIRH] Demarrage du worker de file d'attente..."
+(
+    while true; do
+        su -s /bin/sh www-data -c "php artisan queue:work --sleep=3 --tries=3 --max-time=3600" || true
+        echo "[SIRH] Worker arrete, redemarrage dans 5s..."
+        sleep 5
+    done
+) &
+
 echo "[SIRH] Apache demarre sur le port $PORT"
 exec apache2-foreground

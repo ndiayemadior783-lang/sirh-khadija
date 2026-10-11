@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BulletinPaieMail;
 use App\Models\BulletinPaie;
 use App\Models\Employe;
 use App\Models\Parametre;
 use App\Models\Presence;
 use App\Models\Prime;
+use App\Services\MailConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class BulletinPaieController extends Controller
 {
@@ -96,5 +99,55 @@ class BulletinPaieController extends Controller
     {
         $bulletin->load('employee.poste', 'employee.departement');
         return view('bulletins.show', compact('bulletin'));
+    }
+
+    public function envoyer(Request $request, BulletinPaie $bulletin)
+    {
+        if (!MailConfig::estConfigure()) {
+            return back()->with('error', 'SMTP non configure : activez-le dans Parametres > Messagerie.');
+        }
+
+        $email = $bulletin->employee?->email;
+        if (!$email) {
+            return back()->with('error', 'Cet employe n a pas d adresse e-mail.');
+        }
+
+        Mail::to($email)->queue(new BulletinPaieMail($bulletin));
+
+        activity()->performedOn($bulletin)->causedBy($request->user())->log('Bulletin programme pour envoi par e-mail a ' . $email);
+
+        return back()->with('success', 'Bulletin mis en file d attente pour ' . $email . '. Il sera envoye dans quelques instants.');
+    }
+
+    public function envoyerTous(Request $request)
+    {
+        $data = $request->validate(['period' => ['required', 'date_format:Y-m']]);
+
+        if (!MailConfig::estConfigure()) {
+            return back()->with('error', 'SMTP non configure : activez-le dans Parametres > Messagerie.');
+        }
+
+        $bulletins = BulletinPaie::with('employee')->where('period', $data['period'])->get();
+        $envoyes = 0;
+        $sansEmail = 0;
+
+        foreach ($bulletins as $bulletin) {
+            $email = $bulletin->employee?->email;
+            if (!$email) {
+                $sansEmail++;
+                continue;
+            }
+            Mail::to($email)->queue(new BulletinPaieMail($bulletin));
+            $envoyes++;
+        }
+
+        activity()->causedBy($request->user())->log("Bulletins {$data['period']} programmes pour envoi par e-mail ({$envoyes})");
+
+        $message = "{$envoyes} bulletin(s) mis en file d attente pour envoi.";
+        if ($sansEmail) {
+            $message .= " {$sansEmail} employe(s) sans adresse e-mail.";
+        }
+
+        return back()->with('success', $message);
     }
 }

@@ -44,6 +44,8 @@ echo.
 echo ============================================
 echo    Demarrage du serveur : http://127.0.0.1:8000
 echo    Ctrl+C pour arreter
+echo    (le worker e-mails tourne dans une fenetre reduite)
 echo ============================================
 echo.
+start "SIRH - File d'attente e-mails" /min cmd /k "php artisan queue:work --sleep=3 --tries=3"
 call php artisan serve

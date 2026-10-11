@@ -11,6 +11,17 @@ class Parametre extends Model
         'ipres_employeur', 'ipres_employe', 'ipm_employeur', 'ipm_employe',
         'cfrp_employeur', 'cfrp_employe', 'taxe_exceptionnelle',
         'taux_cotisation', 'taux_impot', 'taux_horaire', 'jours_conge_paye',
+        'mail_actif', 'mail_host', 'mail_port', 'mail_encryption', 'mail_username',
+        'mail_password', 'mail_from_address', 'mail_from_name', 'mail_notif_conges',
+    ];
+
+    protected $hidden = ['mail_password'];
+
+    protected $casts = [
+        'mail_actif' => 'boolean',
+        'mail_notif_conges' => 'boolean',
+        'mail_port' => 'integer',
+        'mail_password' => 'encrypted',
     ];
 
     public function scopes()

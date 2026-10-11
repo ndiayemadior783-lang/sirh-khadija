@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Ne jamais remettre le mot de passe SMTP en session apres une erreur de validation
+        $exceptions->dontFlash(['mail_password']);
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

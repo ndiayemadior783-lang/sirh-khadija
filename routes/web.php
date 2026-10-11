@@ -82,7 +82,9 @@ Route::middleware(['auth'])->group(function () {
     // Bulletins de paie : admin/RH
     Route::get('bulletins', [BulletinPaieController::class, 'index'])->middleware('role:admin,rh')->name('bulletins.index');
     Route::post('bulletins/generer', [BulletinPaieController::class, 'generer'])->middleware('role:admin,rh')->name('bulletins.generer');
+    Route::post('bulletins/envoyer', [BulletinPaieController::class, 'envoyerTous'])->middleware(['role:admin,rh', 'throttle:5,1'])->name('bulletins.envoyer-tous');
     Route::get('bulletins/{bulletin}', [BulletinPaieController::class, 'show'])->middleware('role:admin,rh')->name('bulletins.show');
+    Route::post('bulletins/{bulletin}/envoyer', [BulletinPaieController::class, 'envoyer'])->middleware(['role:admin,rh', 'throttle:20,1'])->name('bulletins.envoyer');
 
 
     // Journal d activite : admin
@@ -145,6 +147,8 @@ Route::middleware(['auth'])->group(function () {
     // Parametres
     Route::get('parametres', [App\Http\Controllers\ParametreController::class, 'index'])->middleware('role:admin,rh')->name('parametres.index');
     Route::post('parametres', [App\Http\Controllers\ParametreController::class, 'update'])->middleware('role:admin,rh')->name('parametres.update');
+    Route::post('parametres/test-smtp', [App\Http\Controllers\ParametreController::class, 'testSmtp'])->middleware(['role:admin,rh', 'throttle:5,1'])->name('parametres.test-smtp');
+    Route::post('parametres/relancer-emails', [App\Http\Controllers\ParametreController::class, 'relancerEchecs'])->middleware('role:admin,rh')->name('parametres.relancer-emails');
 
     // Gestion du profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -99,6 +99,26 @@ sudo ln -sf /etc/nginx/sites-available/sirh-khadija /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 
+echo "==> Worker de file d'attente (envoi des e-mails) via systemd"
+sudo tee /etc/systemd/system/sirh-queue.service > /dev/null <<EOF
+[Unit]
+Description=SIRH Khadija - worker file d'attente
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=5
+WorkingDirectory=$APP_DIR
+ExecStart=/usr/bin/php $APP_DIR/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now sirh-queue
+
 echo "==> HTTPS avec Certbot"
 sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d "$APP_DOMAIN" --non-interactive --agree-tos -m admin@khadijaconsulting.sn --redirect
