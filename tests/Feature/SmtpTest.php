@@ -244,6 +244,85 @@ class SmtpTest extends TestCase
         $this->assertSame('nouveau.smtp.test', config('mail.mailers.smtp.host'));
     }
 
+    // ---- Migration SMTP et erreurs SQL ----
+
+    public function test_migration_smtp_rejouable_sans_perte_de_donnees(): void
+    {
+        $param = Parametre::instance();
+        $param->update(['nom_entreprise' => 'Khadija Consulting Test', 'taux_impot' => 0.08]);
+        $migration = require database_path('migrations/2026_10_11_000001_add_smtp_to_parametres_table.php');
+
+        // Colonnes deja presentes : la migration ne doit rien casser ni dupliquer
+        $migration->up();
+        $migration->up();
+
+        foreach (['mail_actif', 'mail_host', 'mail_port', 'mail_encryption', 'mail_username',
+            'mail_password', 'mail_from_address', 'mail_from_name', 'mail_notif_conges'] as $colonne) {
+            $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('parametres', $colonne), $colonne);
+        }
+        $this->assertSame('Khadija Consulting Test', $param->fresh()->nom_entreprise);
+        $this->assertSame(1, DB::table('parametres')->count());
+    }
+
+    public function test_message_d_erreur_sql_sans_valeurs(): void
+    {
+        try {
+            DB::table('table_inexistante')->where('mail_password', self::MOT_DE_PASSE)->get();
+            $this->fail('Une QueryException etait attendue');
+        } catch (\Illuminate\Database\QueryException $e) {
+            $this->assertStringNotContainsString(self::MOT_DE_PASSE, $e->getMessage());
+            $this->assertStringContainsString('table_inexistante', $e->getMessage());
+        }
+    }
+
+    private function routeQuiEchoueEnSql(string $methode): string
+    {
+        \Illuminate\Support\Facades\Route::middleware('web')->{$methode}('/_test/erreur-sql', function () {
+            $pdo = new \PDOException("SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mail_actif'");
+            $pdo->errorInfo = ['42S22', 1054, "Unknown column 'mail_actif' in 'field list'"];
+
+            throw new \Illuminate\Database\QueryException(
+                'mysql',
+                'update `parametres` set `mail_password` = ? where `id` = ?',
+                [self::MOT_DE_PASSE, 1],
+                $pdo
+            );
+        });
+
+        return '/_test/erreur-sql';
+    }
+
+    public function test_erreur_sql_sur_formulaire_sans_sql_ni_secret(): void
+    {
+        config(['app.debug' => true]);
+        $url = $this->routeQuiEchoueEnSql('post');
+
+        $reponse = $this->actingAs($this->admin())->from(route('parametres.index'))
+            ->post($url, ['nom_entreprise' => 'KC', 'mail_password' => self::MOT_DE_PASSE]);
+
+        $reponse->assertRedirect(route('parametres.index'))->assertSessionHas('error');
+        $this->assertStringNotContainsString('update', session('error'));
+        $this->assertStringNotContainsString(self::MOT_DE_PASSE, json_encode(session()->all()));
+        $this->assertSame('KC', session()->getOldInput('nom_entreprise'));
+        $this->assertNull(session()->getOldInput('mail_password'));
+    }
+
+    public function test_erreur_sql_sur_page_sans_sql_ni_secret_meme_en_debug(): void
+    {
+        config(['app.debug' => true]);
+        $url = $this->routeQuiEchoueEnSql('get');
+
+        $reponse = $this->actingAs($this->admin())->get($url);
+
+        $reponse->assertStatus(500);
+        $this->assertStringNotContainsString(self::MOT_DE_PASSE, $reponse->getContent());
+        $this->assertStringNotContainsString('update `parametres`', $reponse->getContent());
+
+        $json = $this->actingAs($this->admin())->getJson($url);
+        $json->assertStatus(500)->assertJsonPath('message', fn ($m) => str_contains($m, '42S22'));
+        $this->assertStringNotContainsString(self::MOT_DE_PASSE, $json->getContent());
+    }
+
     // ---- Piece jointe PDF ----
 
     public function test_bulletin_envoye_avec_pdf_en_piece_jointe(): void
