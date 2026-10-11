@@ -323,6 +323,163 @@ class SmtpTest extends TestCase
         $this->assertStringNotContainsString(self::MOT_DE_PASSE, $json->getContent());
     }
 
+    // ---- Gmail 534 5.7.9 (InvalidSecondFactor) et masquage des identifiants ----
+
+    public const UTILISATEUR_GMAIL = 'compte.prive.rh@gmail.com';
+
+    /** Transport qui repond comme Gmail quand le mot de passe du compte est utilise a la place d'un mot de passe d'application. */
+    private function simulerRefusGmail(): void
+    {
+        Mail::extend('refus-gmail', fn () => new class extends \Symfony\Component\Mailer\Transport\AbstractTransport
+        {
+            protected function doSend(\Symfony\Component\Mailer\SentMessage $message): void
+            {
+                throw new \Symfony\Component\Mailer\Exception\TransportException(
+                    'Failed to authenticate on SMTP server with username "' . SmtpTest::UTILISATEUR_GMAIL . '" using the following authenticators: "LOGIN", "PLAIN". '
+                    . 'Authenticator "LOGIN" returned "Expected response code "235" but got code "534", with message "534-5.7.9 Application-specific password required. '
+                    . 'For more information, go to 534 5.7.9  https://support.google.com/mail/?p=InvalidSecondFactor".".'
+                );
+            }
+
+            public function __toString(): string
+            {
+                return 'refus-gmail://';
+            }
+        });
+
+        $this->activerSmtp([
+            'mail_host' => 'smtp.gmail.com', 'mail_port' => 587, 'mail_encryption' => 'tls',
+            'mail_username' => self::UTILISATEUR_GMAIL, 'mail_from_address' => self::UTILISATEUR_GMAIL,
+        ]);
+        config(['mail.mailers.smtp.transport' => 'refus-gmail']);
+        Mail::purge('smtp');
+    }
+
+    public function test_erreur_534_traduite_sans_identifiants(): void
+    {
+        $this->simulerRefusGmail();
+
+        try {
+            Mail::to('dest@test.sn')->send(new \App\Mail\TestSmtpMail());
+            $this->fail('Une SmtpException etait attendue');
+        } catch (\App\Exceptions\SmtpException $e) {
+            $this->assertStringContainsString('mot de passe d application', $e->getMessage());
+            $this->assertStringContainsString('534 5.7.9', $e->getMessage());
+            $this->assertStringNotContainsString(self::UTILISATEUR_GMAIL, (string) $e);
+            $this->assertStringNotContainsString(self::MOT_DE_PASSE, (string) $e);
+            $this->assertNull($e->getPrevious());
+        }
+    }
+
+    public function test_bouton_test_smtp_gmail_534_message_clair_et_log_masque(): void
+    {
+        $this->simulerRefusGmail();
+        \Illuminate\Support\Facades\Log::spy();
+
+        $this->actingAs($this->admin())->from(route('parametres.index'))
+            ->post(route('parametres.test-smtp'), ['destinataire' => 'dest@test.sn'])
+            ->assertRedirect(route('parametres.index'));
+
+        $erreur = session('error');
+        $this->assertStringContainsString('mot de passe d application', $erreur);
+        $this->assertStringNotContainsString(self::UTILISATEUR_GMAIL, $erreur);
+        $this->assertStringNotContainsString(self::MOT_DE_PASSE, $erreur);
+
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->withArgs(
+            fn ($message) => str_contains($message, '534') && !str_contains($message, self::UTILISATEUR_GMAIL)
+        );
+    }
+
+    public function test_job_en_file_534_sans_identifiants_dans_l_erreur_stockee(): void
+    {
+        $this->simulerRefusGmail();
+        $job = new \Illuminate\Mail\SendQueuedMailable((new BulletinPaieMail($this->bulletin($this->employe())))->to('awa@test.sn'));
+
+        try {
+            $job->handle(app(\Illuminate\Contracts\Mail\Factory::class));
+            $this->fail('Une SmtpException etait attendue');
+        } catch (\App\Exceptions\SmtpException $e) {
+            // (string) $e est ce qui est enregistre dans failed_jobs.exception
+            $this->assertStringNotContainsString(self::UTILISATEUR_GMAIL, (string) $e);
+            $this->assertStringContainsString('mot de passe d application', (string) $e);
+        }
+    }
+
+    public function test_erreur_smtp_hors_application_masquee_ecran_et_log(): void
+    {
+        \Illuminate\Support\Facades\Log::spy();
+        \Illuminate\Support\Facades\Route::middleware('web')->post('/_test/erreur-smtp', function () {
+            throw new \Symfony\Component\Mailer\Exception\TransportException(
+                'Failed to authenticate on SMTP server with username "' . self::UTILISATEUR_GMAIL . '": 535 5.7.8 Username and Password not accepted.'
+            );
+        });
+
+        $this->from('/forgot-password')->post('/_test/erreur-smtp', ['email' => 'x@test.sn', 'password' => self::MOT_DE_PASSE])
+            ->assertRedirect('/forgot-password');
+
+        $this->assertStringContainsString('Identifiants SMTP refuses', session('error'));
+        $this->assertStringNotContainsString(self::UTILISATEUR_GMAIL, json_encode(session()->all()));
+        $this->assertStringNotContainsString(self::MOT_DE_PASSE, json_encode(session()->all()));
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('error')->withArgs(
+            fn ($message) => str_contains($message, 'Erreur SMTP') && !str_contains($message, self::UTILISATEUR_GMAIL)
+        );
+    }
+
+    public function test_mot_de_passe_application_gmail_colle_avec_espaces(): void
+    {
+        $this->activerSmtp(['mail_host' => 'smtp.gmail.com', 'mail_port' => 587, 'mail_encryption' => 'tls', 'mail_password' => 'abcd efgh ijkl mnop']);
+
+        $this->assertSame('abcdefghijklmnop', config('mail.mailers.smtp.password'));
+        $this->assertSame('smtp', config('mail.mailers.smtp.scheme'));
+        $this->assertTrue(config('mail.mailers.smtp.auto_tls'));
+        $this->assertSame(587, config('mail.mailers.smtp.port'));
+    }
+
+    public function test_espaces_conserves_hors_gmail(): void
+    {
+        $this->activerSmtp(['mail_host' => 'mail.khadija.sn', 'mail_password' => 'mot de passe']);
+
+        $this->assertSame('mot de passe', config('mail.mailers.smtp.password'));
+    }
+
+    public function test_avertissement_mot_de_passe_gmail_non_conforme_et_jamais_reaffiche(): void
+    {
+        $param = $this->activerSmtp(['mail_host' => 'smtp.gmail.com', 'mail_port' => 587, 'mail_encryption' => 'tls']);
+        $donnees = collect($param->fresh()->getAttributes())->except(['id', 'created_at', 'updated_at', 'mail_password'])->all();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->post(route('parametres.update'), $donnees + ['mail_password' => 'Court123'])
+            ->assertSessionHas('success', fn ($m) => str_contains($m, '16 caracteres'));
+
+        $this->actingAs($admin)->post(route('parametres.update'), $donnees + ['mail_password' => 'abcd efgh ijkl mnop'])
+            ->assertSessionHas('success', fn ($m) => !str_contains($m, '16 caracteres'));
+
+        $this->actingAs($admin)->get(route('parametres.index'))
+            ->assertOk()
+            ->assertDontSee('abcd efgh ijkl mnop')
+            ->assertDontSee('abcdefghijklmnop')
+            ->assertSee('value=""', false);
+    }
+
+    public function test_commande_smtp_tester_masque_les_identifiants(): void
+    {
+        $this->activerSmtp(['mail_host' => 'smtp.gmail.com', 'mail_port' => 587, 'mail_encryption' => 'tls',
+            'mail_username' => self::UTILISATEUR_GMAIL, 'mail_password' => 'Court123']);
+
+        $this->artisan('smtp:tester', ['destinataire' => 'dest@test.sn', '--verifier' => true])
+            ->expectsOutputToContain('16 caracteres')
+            ->doesntExpectOutputToContain(self::UTILISATEUR_GMAIL)
+            ->doesntExpectOutputToContain('Court123')
+            ->assertFailed();
+
+        $this->simulerRefusGmail();
+        $this->artisan('smtp:tester', ['destinataire' => 'dest@test.sn'])
+            ->expectsOutputToContain('mot de passe d application')
+            ->doesntExpectOutputToContain(self::UTILISATEUR_GMAIL)
+            ->doesntExpectOutputToContain(self::MOT_DE_PASSE)
+            ->assertFailed();
+    }
+
     // ---- Piece jointe PDF ----
 
     public function test_bulletin_envoye_avec_pdf_en_piece_jointe(): void

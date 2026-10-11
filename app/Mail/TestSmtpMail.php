@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 class TestSmtpMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, EnvoiSmtpSecurise;
 
     public function envelope(): Envelope
     {

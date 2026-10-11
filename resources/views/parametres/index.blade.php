@@ -150,6 +150,7 @@
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-xs font-semibold text-slate-600">Mot de passe</label>
                     <input type="password" name="mail_password" value="" autocomplete="new-password" placeholder="{{ $param->mail_password ? '•••••••• (laisser vide pour conserver)' : '' }}" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full rounded-lg border-slate-300 shadow-sm sm:text-sm">
+                    <p class="mt-1 text-xs text-slate-500">Gmail : mot de passe d application de 16 caracteres (myaccount.google.com/apppasswords), pas le mot de passe du compte. Le mot de passe enregistre n est jamais reaffiche.</p>
                     @if($param->mail_password)
                         <label class="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
                             <input type="checkbox" name="mail_password_clear" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500"> Effacer le mot de passe enregistre

@@ -12,7 +12,7 @@ use Illuminate\Queue\SerializesModels;
 
 class CongeDecisionMail extends Mailable implements ShouldQueue
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, EnvoiSmtpSecurise;
 
     public int $tries = 3;
 

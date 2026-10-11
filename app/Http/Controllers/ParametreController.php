@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\SmtpException;
 use App\Mail\TestSmtpMail;
 use App\Models\Parametre;
 use App\Services\MailConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -66,7 +68,13 @@ class ParametreController extends Controller
         $param->update($data);
         MailConfig::refresh();
 
-        return back()->with('success', 'Parametres mis a jour avec succes.');
+        $message = 'Parametres mis a jour avec succes.';
+        $motDePasseGmail = preg_replace('/\s+/', '', (string) $param->mail_password);
+        if ($param->mail_actif && MailConfig::estGmail($param->mail_host) && $motDePasseGmail !== '' && strlen($motDePasseGmail) !== 16) {
+            $message .= ' Attention : pour Gmail, utilisez un mot de passe d application (16 caracteres), pas le mot de passe du compte.';
+        }
+
+        return back()->with('success', $message);
     }
 
     public function testSmtp(Request $request)
@@ -82,8 +90,10 @@ class ParametreController extends Controller
         try {
             Mail::to($data['destinataire'])->send(new TestSmtpMail());
         } catch (\Throwable $e) {
-            report($e);
-            return back()->with('error', 'Echec de l envoi : ' . $e->getMessage());
+            $message = $e instanceof SmtpException ? $e->getMessage() : MailConfig::messageErreur($e);
+            Log::warning('Test SMTP en echec : ' . $message);
+
+            return back()->with('error', 'Echec de l envoi : ' . $message);
         }
 
         return back()->with('success', 'E-mail de test envoye a ' . $data['destinataire'] . '.');
