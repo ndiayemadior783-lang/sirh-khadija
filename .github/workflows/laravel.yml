@@ -14,8 +14,19 @@ jobs:
     steps:
     - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
       with:
-        php-version: '8.0'
+        # Meme version que le Dockerfile (php:8.3-apache) ; Laravel 13 exige PHP >= 8.3
+        php-version: '8.3'
+        extensions: mbstring, dom, fileinfo, pdo_sqlite, gd, zip
     - uses: actions/checkout@v4
+    # Assets Vite (public/build) : requis par les vues testees, comme dans le Dockerfile
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    - name: Build assets
+      run: |
+        npm ci
+        npm run build
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
     - name: Install Dependencies
