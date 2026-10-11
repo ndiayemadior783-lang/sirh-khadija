@@ -10,6 +10,8 @@ use Tests\TestCase;
 
 class FactureTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_employe_ne_peut_pas_acceder_aux_factures(): void
     {
         $user = new User([
