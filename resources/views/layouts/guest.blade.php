@@ -13,6 +13,13 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+        <!-- PWA -->
+        <meta name="theme-color" content="#1e3a5f">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="apple-touch-icon" href="/icon-192.png">
+        <link rel="icon" type="image/png" href="/icon-192.png">
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
@@ -28,3 +35,4 @@
         </div>
     </body>
 </html>
+

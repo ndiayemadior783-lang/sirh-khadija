@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\BulletinPaieController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CongeController;
 use App\Http\Controllers\ContratController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartementController;
 use App\Http\Controllers\EmployeController;
+use App\Http\Controllers\FactureController;
 use App\Http\Controllers\FormationController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\PrimeController;
@@ -28,6 +30,12 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:admin,rh,manager')->group(function () {
         Route::post('conges/{conge}/valider', [CongeController::class, 'valider'])->name('conges.valider');
         Route::post('conges/{conge}/rejeter', [CongeController::class, 'rejeter'])->name('conges.rejeter');
+    });
+
+    // Planning des conges : gestionnaires
+    Route::middleware('role:admin,rh,manager')->group(function () {
+        Route::get('conges/planning', [CongeController::class, 'planning'])->name('conges.planning');
+        Route::get('conges/planning/pdf', [CongeController::class, 'planningPdf'])->name('conges.planning-pdf');
     });
 
     // Employes : consultation pour les gestionnaires, ecriture admin/RH
@@ -75,6 +83,68 @@ Route::middleware(['auth'])->group(function () {
     Route::get('bulletins', [BulletinPaieController::class, 'index'])->middleware('role:admin,rh')->name('bulletins.index');
     Route::post('bulletins/generer', [BulletinPaieController::class, 'generer'])->middleware('role:admin,rh')->name('bulletins.generer');
     Route::get('bulletins/{bulletin}', [BulletinPaieController::class, 'show'])->middleware('role:admin,rh')->name('bulletins.show');
+
+
+    // Journal d activite : admin
+    Route::middleware('role:admin')->group(function () {
+        Route::get('journal', [App\Http\Controllers\JournalController::class, 'index'])->name('journal.index');
+        Route::post('journal/clear', [App\Http\Controllers\JournalController::class, 'clear'])->name('journal.clear');
+    });
+    // Livre de paie : admin/RH
+    Route::get('livre-paie', [App\Http\Controllers\LivrePaieController::class, 'livrePaie'])->middleware('role:admin,rh')->name('livre-paie.index');
+
+    // Etat des cotisations : admin/RH
+    Route::get('cotisations', [App\Http\Controllers\LivrePaieController::class, 'etatCotisations'])->middleware('role:admin,rh')->name('cotisations.index');
+
+    // Facturation & Clients : admin/RH
+    Route::middleware('role:admin,rh')->group(function () {
+        Route::resource('clients', ClientController::class);
+        Route::resource('factures', FactureController::class);
+        Route::post('factures/{facture}/marquer-payee', [FactureController::class, 'marquerPayee'])->name('factures.marquer-payee');
+        Route::post('factures/{facture}/changer-statut', [FactureController::class, 'changerStatut'])->name('factures.changer-statut');
+        Route::get('factures/{facture}/pdf', [FactureController::class, 'pdf'])->name('factures.pdf');
+    });
+
+
+    
+    // Export CSV/Excel
+    Route::get('export/employes/csv', [App\Http\Controllers\ExportController::class, 'employesCsv'])->middleware('role:admin,rh,manager')->name('export.employes-csv');
+    Route::get('export/bulletins/csv', [App\Http\Controllers\ExportController::class, 'bulletinsCsv'])->middleware('role:admin,rh')->name('export.bulletins-csv');
+    Route::get('export/conges/csv', [App\Http\Controllers\ExportController::class, 'congesCsv'])->middleware('role:admin,rh')->name('export.conges-csv');
+    Route::get('export/presences/csv', [App\Http\Controllers\ExportController::class, 'presencesCsv'])->middleware('role:admin,rh')->name('export.presences-csv');
+
+        // Liste des attestations (page globale)
+    Route::get('attestations', [App\Http\Controllers\ExportController::class, 'attestationsIndex'])->middleware('role:admin,rh')->name('attestations.index');
+
+    Route::get('export/attestations/pdf', [App\Http\Controllers\ExportController::class, 'listeAttestations'])->middleware('role:admin,rh')->name('export.attestations-pdf');
+    // Registre unique du personnel (RUP)
+    Route::get('registre', [App\Http\Controllers\RegistreController::class, 'index'])->middleware('role:admin,rh')->name('registre.index');
+    Route::get('registre/pdf', [App\Http\Controllers\RegistreController::class, 'pdf'])->middleware('role:admin,rh')->name('registre.pdf');
+    Route::get('registre/csv', [App\Http\Controllers\RegistreController::class, 'csv'])->middleware('role:admin,rh')->name('registre.csv');
+    // Attestations
+    Route::get('export/{employe}/attestation-travail.pdf', [App\Http\Controllers\ExportController::class, 'attestationTravail'])->middleware('role:admin,rh')->name('export.attestation-travail');
+    Route::get('export/{employe}/attestation-salaire.pdf', [App\Http\Controllers\ExportController::class, 'attestationSalaire'])->middleware('role:admin,rh')->name('export.attestation-salaire');
+    Route::get('export/{employe}/certificat-travail.pdf', [App\Http\Controllers\ExportController::class, 'certificatTravail'])->middleware('role:admin,rh')->name('export.certificat-travail');
+
+    // Export PDF
+    Route::get('export/bulletins/{bulletin}/pdf', [App\Http\Controllers\ExportController::class, 'bulletin'])->middleware('role:admin,rh')->name('export.bulletin');
+    Route::get('export/livre-paie/pdf', [App\Http\Controllers\ExportController::class, 'livrePaie'])->middleware('role:admin,rh')->name('export.livre-paie');
+    Route::get('export/cotisations/pdf', [App\Http\Controllers\ExportController::class, 'etatCotisations'])->middleware('role:admin,rh')->name('export.cotisations');
+    Route::get('export/employes/pdf', [App\Http\Controllers\ExportController::class, 'listeEmployes'])->middleware('role:admin,rh,manager')->name('export.employes');
+
+    
+        // Utilisateurs
+    Route::get('utilisateurs', [App\Http\Controllers\UserController::class, 'index'])->middleware('role:admin')->name('utilisateurs.index');
+    Route::get('utilisateurs/create', [App\Http\Controllers\UserController::class, 'create'])->middleware('role:admin')->name('utilisateurs.create');
+    Route::post('utilisateurs', [App\Http\Controllers\UserController::class, 'store'])->middleware('role:admin')->name('utilisateurs.store');
+    Route::get('utilisateurs/{user}/edit', [App\Http\Controllers\UserController::class, 'edit'])->middleware('role:admin')->name('utilisateurs.edit');
+    Route::put('utilisateurs/{user}', [App\Http\Controllers\UserController::class, 'update'])->middleware('role:admin')->name('utilisateurs.update');
+    Route::post('utilisateurs/{user}/reset-password', [App\Http\Controllers\UserController::class, 'resetPassword'])->middleware('role:admin')->name('utilisateurs.reset-password');
+    Route::delete('utilisateurs/{user}', [App\Http\Controllers\UserController::class, 'destroy'])->middleware('role:admin')->name('utilisateurs.destroy');
+
+    // Parametres
+    Route::get('parametres', [App\Http\Controllers\ParametreController::class, 'index'])->middleware('role:admin,rh')->name('parametres.index');
+    Route::post('parametres', [App\Http\Controllers\ParametreController::class, 'update'])->middleware('role:admin,rh')->name('parametres.update');
 
     // Gestion du profil utilisateur
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

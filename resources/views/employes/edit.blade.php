@@ -35,6 +35,10 @@
                         <x-text-input id="date_naissance" name="date_naissance" type="date" class="mt-1 block w-full" value="{{ old('date_naissance', $employe->date_naissance?->format('Y-m-d')) }}" />
                     </div>
                     <div>
+                        <x-input-label for="lieu_naissance" value="Lieu de naissance" />
+                        <x-text-input id="lieu_naissance" name="lieu_naissance" class="mt-1 block w-full" value="{{ old('lieu_naissance', $employe->lieu_naissance) }}" />
+                    </div>
+                    <div>
                         <x-input-label for="cin" value="N° pièce d'identité" />
                         <x-text-input id="cin" name="cin" class="mt-1 block w-full" value="{{ old('cin', $employe->cin) }}" />
                     </div>

@@ -40,12 +40,17 @@ class PrimeController extends Controller
 
         Prime::create($data);
 
-        return redirect()->route('primes.index')->with('success', 'Prime enregistrée.');
+        activity()->performedOn(Prime::latest()->first())->causedBy($request->user())->withProperties(['data' => $data])->log('Prime enregistree');
+
+        return redirect()->route('primes.index')->with('success', 'Prime enregistree.');
     }
 
-    public function destroy(Prime $prime)
+    public function destroy(Request $request, Prime $prime)
     {
+        activity()->performedOn($prime)->causedBy($request->user())->log('Prime supprimee');
+
         $prime->delete();
-        return redirect()->route('primes.index')->with('success', 'Prime supprimée.');
+
+        return redirect()->route('primes.index')->with('success', 'Prime supprimee.');
     }
 }

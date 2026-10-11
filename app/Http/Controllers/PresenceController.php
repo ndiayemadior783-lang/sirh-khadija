@@ -50,13 +50,18 @@ class PresenceController extends Controller
             $data
         );
 
+        activity()->performedOn(Presence::latest()->first())->causedBy($request->user())->withProperties(['data' => $data])->log('Presence enregistree');
+
         return redirect()->route('presences.index', ['date' => $data['date']])
-            ->with('success', 'Présence enregistrée.');
+            ->with('success', 'Presence enregistree.');
     }
 
-    public function destroy(Presence $presence)
+    public function destroy(Request $request, Presence $presence)
     {
+        activity()->performedOn($presence)->causedBy($request->user())->log('Pointage supprime');
+
         $presence->delete();
-        return redirect()->route('presences.index')->with('success', 'Pointage supprimé.');
+
+        return redirect()->route('presences.index')->with('success', 'Pointage supprime.');
     }
 }

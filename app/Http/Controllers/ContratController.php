@@ -44,7 +44,9 @@ class ContratController extends Controller
 
         Contrat::create($data);
 
-        return redirect()->route('contrats.index')->with('success', 'Contrat enregistré avec succès.');
+        activity()->performedOn(Contrat::latest()->first())->causedBy($request->user())->withProperties(['data' => $data])->log('Contrat enregistre');
+
+        return redirect()->route('contrats.index')->with('success', 'Contrat enregistre avec succes.');
     }
 
     public function show(Contrat $contrat)
@@ -53,9 +55,12 @@ class ContratController extends Controller
         return view('contrats.show', compact('contrat'));
     }
 
-    public function destroy(Contrat $contrat)
+    public function destroy(Request $request, Contrat $contrat)
     {
+        activity()->performedOn($contrat)->causedBy($request->user())->log('Contrat supprime');
+
         $contrat->delete();
-        return redirect()->route('contrats.index')->with('success', 'Contrat supprimé.');
+
+        return redirect()->route('contrats.index')->with('success', 'Contrat supprime.');
     }
 }

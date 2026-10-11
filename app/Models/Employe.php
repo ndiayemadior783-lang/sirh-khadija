@@ -12,7 +12,7 @@ class Employe extends Model
     protected $table = 'employees';
 
     protected $fillable = [
-        'user_id', 'matricule', 'prenom', 'nom', 'genre', 'date_naissance', 'email',
+        'user_id', 'matricule', 'prenom', 'nom', 'genre', 'date_naissance', 'lieu_naissance', 'email',
         'telephone', 'adresse', 'ville', 'nationalite', 'cin', 'date_embauche',
         'statut', 'poste_id', 'departement_id', 'responsable_id', 'salaire_base', 'photo',
     ];
@@ -96,5 +96,30 @@ class Employe extends Model
     public function getInitialesAttribute(): string
     {
         return strtoupper(mb_substr($this->prenom, 0, 1) . mb_substr($this->nom, 0, 1));
+    }
+
+    public function joursCongeAnnuel(): int
+    {
+        static $jours = null;
+        if ($jours === null) {
+            $jours = (int) (Parametre::instance()->jours_conge_paye ?: 22);
+        }
+        return $jours;
+    }
+
+    public function congesPris(?int $year = null, string $type = 'paye'): int
+    {
+        $year = $year ?? now()->year;
+
+        return (int) $this->conges()
+            ->where('type', $type)
+            ->where('statut', 'valide')
+            ->whereYear('date_debut', $year)
+            ->sum('jours');
+    }
+
+    public function soldeConges(?int $year = null): int
+    {
+        return $this->joursCongeAnnuel() - $this->congesPris($year);
     }
 }

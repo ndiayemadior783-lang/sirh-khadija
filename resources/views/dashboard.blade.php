@@ -56,6 +56,81 @@
         </div>
     </div>
 
+    
+    <!-- Statistiques du mois -->
+    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Embauches ce mois</p>
+                    <p class="mt-1 text-3xl font-bold text-indigo-600">{{ $embauchesMois }}</p>
+                    <p class="mt-1 text-xs text-slate-400">{{ now()->translatedFormat('F Y') }}</p>
+                </div>
+                <div class="stat-icon bg-indigo-50 text-indigo-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Congés validés (mois)</p>
+                    <p class="mt-1 text-3xl font-bold text-emerald-600">{{ $congesValidesMois }}</p>
+                    <p class="mt-1 text-xs text-slate-400">{{ $nombreCongesMois }} demande(s) ce mois</p>
+                </div>
+                <div class="stat-icon bg-emerald-50 text-emerald-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Congés en attente (mois)</p>
+                    <p class="mt-1 text-3xl font-bold text-amber-600">{{ $congesAttenteMois }}</p>
+                    <p class="mt-1 text-xs text-slate-400">à valider</p>
+                </div>
+                <div class="stat-icon bg-amber-50 text-amber-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Formations en cours</p>
+                    <p class="mt-1 text-3xl font-bold text-rose-600">{{ $formationsEnCours }}</p>
+                    <p class="mt-1 text-xs text-slate-400">aujourd'hui</p>
+                </div>
+                <div class="stat-icon bg-rose-50 text-rose-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="card p-6">
+            <h2 class="text-base font-semibold text-amber-700">Conges en attente ({{ $congesEnAttente }})</h2>
+            @if($congesEnAttente > 0)
+                <p class="mt-2 text-sm text-slate-600">Vous avez {{ $congesEnAttente }} demande(s) de conge en attente de validation.</p>
+                <a href="{{ route('conges.index') }}" class="mt-2 inline-block text-sm font-semibold text-indigo-600 hover:underline">Voir les conges</a>
+            @else
+                <p class="mt-2 text-sm text-slate-500">Aucune demande en attente.</p>
+            @endif
+        </div>
+        <div class="card p-6">
+            <h2 class="text-base font-semibold text-rose-700">Contrats expirants</h2>
+            @if($contratsExpirants->count() > 0)
+                @foreach($contratsExpirants as $c)
+                    <p class="mt-1 text-sm text-slate-600"><strong>{{ $c->employee?->nomComplet }}</strong> - expire le {{ $c->date_fin->format('d/m/Y') }} ({{ $c->date_fin->diffForHumans() }})</p>
+                @endforeach
+            @else
+                <p class="mt-2 text-sm text-slate-500">Aucun contrat expire bientot.</p>
+            @endif
+        </div>
+    </div>
+
     <!-- Graphiques -->
     <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div class="card p-6">
@@ -65,6 +140,56 @@
         <div class="card p-6">
             <h2 class="text-base font-semibold text-slate-800">Évolution de la masse salariale (6 mois)</h2>
             <canvas id="chartPaie" class="mt-4" height="220"></canvas>
+        </div>
+    </div>
+
+    <!-- Répartitions CSS -->
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="card p-6">
+            <h2 class="text-base font-semibold text-slate-800">Répartition par statut</h2>
+            @php $statutCouleurs = ['actif' => 'bg-emerald-500', 'inactif' => 'bg-slate-400', 'suspendu' => 'bg-amber-500', 'demission' => 'bg-rose-500']; $maxStatut = max(1, (int) ($statuts->max() ?? 1)); @endphp
+            <div class="mt-4 space-y-4">
+                @forelse($statuts as $statut => $nb)
+                    <div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="font-medium capitalize text-slate-700">{{ $statut }}</span>
+                            <span class="font-semibold text-slate-800">{{ $nb }} employé(s)</span>
+                        </div>
+                        <div class="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div class="h-full rounded-full {{ $statutCouleurs[$statut] ?? 'bg-indigo-500' }}" style="width: {{ round($nb / $maxStatut * 100) }}%"></div>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-sm text-slate-500">Aucun employé.</p>
+                @endforelse
+            </div>
+        </div>
+        <div class="card p-6">
+            <h2 class="text-base font-semibold text-slate-800">Répartition par genre</h2>
+            @php $totalGenre = max(1, (int) ($parGenre->sum() ?? 0)); $hommes = (int) ($parGenre['M'] ?? 0); $femmes = (int) ($parGenre['F'] ?? 0); @endphp
+            <div class="mt-4 space-y-4">
+                <div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="font-medium text-slate-700">Hommes</span>
+                        <span class="font-semibold text-slate-800">{{ $hommes }} employé(s) ({{ round($hommes / $totalGenre * 100) }}%)</span>
+                    </div>
+                    <div class="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div class="h-full rounded-full bg-indigo-500" style="width: {{ round($hommes / $totalGenre * 100) }}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="font-medium text-slate-700">Femmes</span>
+                        <span class="font-semibold text-slate-800">{{ $femmes }} employé(s) ({{ round($femmes / $totalGenre * 100) }}%)</span>
+                    </div>
+                    <div class="mt-1.5 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div class="h-full rounded-full bg-pink-500" style="width: {{ round($femmes / $totalGenre * 100) }}%"></div>
+                    </div>
+                </div>
+                @if($hommes + $femmes === 0)
+                    <p class="text-sm text-slate-500">Aucun employé.</p>
+                @endif
+            </div>
         </div>
     </div>
 

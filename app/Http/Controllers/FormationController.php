@@ -33,7 +33,9 @@ class FormationController extends Controller
 
         Formation::create($data);
 
-        return redirect()->route('formations.index')->with('success', 'Formation créée.');
+        activity()->performedOn(Formation::latest()->first())->causedBy($request->user())->withProperties(['data' => $data])->log('Formation creee');
+
+        return redirect()->route('formations.index')->with('success', 'Formation creee.');
     }
 
     public function show(Formation $formation)
@@ -53,6 +55,8 @@ class FormationController extends Controller
             $data['employee_id'] => ['statut' => 'inscrit'],
         ]);
 
-        return back()->with('success', 'Employé inscrit à la formation.');
+        activity()->performedOn($formation)->causedBy($request->user())->withProperties($data)->log('Employe inscrit a la formation');
+
+        return back()->with('success', 'Employe inscrit a la formation.');
     }
 }

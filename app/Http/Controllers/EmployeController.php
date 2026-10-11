@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Activitylog\Facades\Activitylog;
 
 class EmployeController extends Controller
 {
@@ -56,6 +57,7 @@ class EmployeController extends Controller
             'nom' => ['required', 'string', 'max:100'],
             'genre' => ['required', 'in:M,F'],
             'date_naissance' => ['nullable', 'date'],
+            'lieu_naissance' => ['nullable', 'string', 'max:150'],
             'email' => ['nullable', 'email', Rule::unique('employees', 'email')],
             'telephone' => ['nullable', 'string', 'max:30'],
             'adresse' => ['nullable', 'string', 'max:255'],
@@ -86,7 +88,9 @@ class EmployeController extends Controller
 
         unset($data['creer_compte'], $data['email_compte']);
 
-        Employe::create($data);
+        $employe = Employe::create($data);
+
+        activity()->performedOn($employe)->causedBy($request->user())->withProperties(['data' => $request->except(['creer_compte', 'email_compte'])])->log('Employe ajoute');
 
         return redirect()->route('employes.index')->with('success', 'Employe ajoute avec succes.');
     }
@@ -125,6 +129,7 @@ class EmployeController extends Controller
             'nom' => ['required', 'string', 'max:100'],
             'genre' => ['required', 'in:M,F'],
             'date_naissance' => ['nullable', 'date'],
+            'lieu_naissance' => ['nullable', 'string', 'max:150'],
             'email' => ['nullable', 'email', Rule::unique('employees', 'email')->ignore($employe->id)],
             'telephone' => ['nullable', 'string', 'max:30'],
             'adresse' => ['nullable', 'string', 'max:255'],
@@ -144,8 +149,9 @@ class EmployeController extends Controller
         return redirect()->route('employes.show', $employe)->with('success', 'Employe mis a jour avec succes.');
     }
 
-    public function destroy(Employe $employe)
+    public function destroy(Request $request, Employe $employe)
     {
+        activity()->performedOn($employe)->causedBy($request->user())->log('Employe supprime');
         $employe->delete();
         return redirect()->route('employes.index')->with('success', 'Employe supprime.');
     }

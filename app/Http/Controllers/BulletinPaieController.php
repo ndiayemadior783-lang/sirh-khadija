@@ -4,16 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\BulletinPaie;
 use App\Models\Employe;
+use App\Models\Parametre;
 use App\Models\Presence;
 use App\Models\Prime;
 use Illuminate\Http\Request;
 
 class BulletinPaieController extends Controller
 {
-    private const TAUX_COTISATIONS = 0.06;
-    private const TAUX_IMPOT = 0.08;
-    private const TAUX_HORAIRE = 1500;
-
     public function index(Request $request)
     {
         $period = $request->query('period', now()->format('Y-m'));
@@ -35,6 +32,11 @@ class BulletinPaieController extends Controller
     {
         $period = $request->input('period', now()->format('Y-m'));
 
+        $param = Parametre::instance();
+        $tauxCotisation = $param->taux_cotisation;
+        $tauxImpot = $param->taux_impot;
+        $tauxHoraire = $param->taux_horaire;
+
         $employes = Employe::where('statut', 'actif')->get();
         $cree = 0;
 
@@ -53,13 +55,13 @@ class BulletinPaieController extends Controller
                 ->whereMonth('date', (int) substr($period, 5, 2))
                 ->sum('heures_sup');
 
-            $montantHeuresSup = round($heuresSup * self::TAUX_HORAIRE, 2);
+            $montantHeuresSup = round($heuresSup * $tauxHoraire, 2);
             $brut = $employe->salaire_base + $primes + $montantHeuresSup;
-            $cotisations = round($brut * self::TAUX_COTISATIONS, 2);
-            $impots = round(($brut - $cotisations) * self::TAUX_IMPOT, 2);
+            $cotisations = round($brut * $tauxCotisation, 2);
+            $impots = round(($brut - $cotisations) * $tauxImpot, 2);
             $net = $brut - $cotisations - $impots;
 
-            BulletinPaie::create([
+            $bulletin = BulletinPaie::create([
                 'numero' => 'BUL-' . str_replace('-', '', $period) . '-' . str_pad((string)(BulletinPaie::max('id') + 1), 4, '0', STR_PAD_LEFT),
                 'employee_id' => $employe->id,
                 'period' => $period,
@@ -75,11 +77,17 @@ class BulletinPaieController extends Controller
             ]);
 
             $cree++;
+
+            activity()->performedOn($bulletin)->causedBy(auth()->user())->withProperties(['employe_id' => $employe->id, 'period' => $period])->log('Bulletin genere');
+        }
+
+        if ($cree > 0) {
+            activity()->causedBy(auth()->user())->withProperties(['period' => $period, 'nombre' => $cree])->log('Generation de ' . $cree . ' bulletins pour ' . $period);
         }
 
         $message = $cree > 0
             ? "{$cree} bulletin(s) genere(s) pour la periode {$period}."
-            : 'Tous les bulletins existent deje pour cette periode.';
+            : 'Tous les bulletins existent deja pour cette periode.';
 
         return redirect()->route('bulletins.index', ['period' => $period])->with('success', $message);
     }

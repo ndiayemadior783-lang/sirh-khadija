@@ -31,12 +31,17 @@ class DepartementController extends Controller
 
         Departement::create($data);
 
-        return redirect()->route('departements.index')->with('success', 'Département créé.');
+        activity()->performedOn(Departement::latest()->first())->causedBy($request->user())->withProperties(['data' => $data])->log('Departement cree');
+
+        return redirect()->route('departements.index')->with('success', 'Departement cree.');
     }
 
-    public function destroy(Departement $departement)
+    public function destroy(Request $request, Departement $departement)
     {
+        activity()->performedOn($departement)->causedBy($request->user())->log('Departement supprime');
+
         $departement->delete();
-        return redirect()->route('departements.index')->with('success', 'Département supprimé.');
+
+        return redirect()->route('departements.index')->with('success', 'Departement supprime.');
     }
 }

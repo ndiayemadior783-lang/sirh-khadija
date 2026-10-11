@@ -9,6 +9,14 @@
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <!-- PWA Configuration -->
+        <meta name="theme-color" content="#1e3a5f">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="SIRH KC">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="apple-touch-icon" href="/icon-192.png">
+        <link rel="icon" type="image/png" href="/icon-192.png">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
@@ -41,5 +49,19 @@
             </div>
         </div>
             @stack('scripts')
+    
+@push('scripts')
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                console.log('Service Worker enregistre', reg.scope);
+            }).catch(function(err) {
+                console.log('Service Worker erreur:', err);
+            });
+        });
+    }
+</script>
+@endpush
     </body>
 </html>

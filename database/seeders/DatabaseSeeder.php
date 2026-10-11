@@ -90,5 +90,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // ---- Facturation & Clients ----
+        $this->call(FacturationSeeder::class);
     }
 }

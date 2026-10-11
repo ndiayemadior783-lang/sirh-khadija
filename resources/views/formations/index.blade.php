@@ -6,11 +6,16 @@
                 <h1 class="text-2xl font-bold text-slate-800">Plan de formation</h1>
                 <p class="mt-1 text-sm text-slate-500">Catalogue des formations du personnel</p>
             </div>
+            <button onclick="window.print()" class="btn-secondary">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2z"/></svg>
+                Imprimer
+            </button>
             <a href="{{ route('formations.create') }}" class="btn-primary">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 Nouvelle formation
             </a>
-        </div>
+                        <button onclick="window.print()" class="btn-secondary"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2z"/></svg> Imprimer</button>
+</div>
     </x-slot>
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -35,4 +40,13 @@
             <p class="col-span-full py-10 text-center text-sm text-slate-500">Aucune formation.</p>
         @endforelse
     </div>
+
+    <style>
+        @media print {
+            aside, header, nav { display: none !important; }
+            main { padding: 0 !important; max-width: 100% !important; }
+            body { background: white !important; }
+            .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+        }
+    </style>
 </x-app-layout>
